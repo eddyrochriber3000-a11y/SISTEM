@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Profissional de Faturamento e Produção</title>
+  
+  <!-- FAVICON EXECUTIVO DO ERP (GRÁFICO DE FATURAMENTO E PRODUÇÃO EM SVG DATA URI) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%231E293B'/><path d='M12 48h40' stroke='%2394A3B8' stroke-width='4' stroke-linecap='round'/><rect x='16' y='32' width='8' height='16' rx='2' fill='%2394A3B8'/><rect x='28' y='24' width='8' height='24' rx='2' fill='%23CBD5E1'/><rect x='40' y='14' width='8' height='34' rx='2' fill='%23C74634'/><path d='M16 28l12-10 12-8 8-4' fill='none' stroke='%2322C55E' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/><polyline points='42,6 48,6 48,12' fill='none' stroke='%2322C55E' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+
+  <!-- Chart.js para renderização dos gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS para Leitura, Importação e Exportação de arquivos Excel (.xlsx / .xls) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    /* Temas de Cores e Imagens de Fundo (A até H) */
+    :root {
+      /* Estilo A */
+      --primary: #C74634;        
+      --primary-accent: #A73222;  
+      --secondary: #1E293B;      
+      --bg: #F4F4F4;             
+      --card-bg: rgba(255, 255, 255, 0.97);        
+      --border: #CBD5E1;        
+      --text: #0F172A;          
+      --text-muted: #475569;    
+      --danger: #DC2626;        
+      --success: #16A34A;       
+      --warning: #D97706;       
+      --weekend-bg: rgba(226, 232, 240, 0.95);
+      --bg-image: url('https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1920&auto=format&fit=crop');    
+    }
+
+    body.theme-b {
+      --primary: #003366; --primary-accent: #00509E; --secondary: #1E293B; --bg: #F0F4F8;
+      --card-bg: rgba(255, 255, 255, 0.97); --border: #CBD5E1; --text: #0F172A; --text-muted: #475569;
+      --danger: #DC2626; --success: #16A34A; --warning: #D97706; --weekend-bg: rgba(226, 232, 240, 0.95);
+      --bg-image: url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1920&auto=format&fit=crop');
+    }
+
+    body.theme-c {
+      --primary: #0A6ED1; --primary-accent: #003366; --secondary: #1E293B; --bg: #EDF0F2;
+      --card-bg: rgba(255, 255, 255, 0.97); --border: #CBD5E1; --text: #0F172A; --text-muted: #475569;
+      --danger: #DC2626; --success: #16A34A; --warning: #D97706; --weekend-bg: rgba(226, 232, 240, 0.95);
+      --bg-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop');
+    }
+
+    body.theme-d {
+      --primary: #742774; --primary-accent: #501350; --secondary: #1E293B; --bg: #F3F2F1;
+      --card-bg: rgba(255, 255, 255, 0.97); --border: #CBD5E1; --text: #0F172A; --text-muted: #475569;
+      --danger: #DC2626; --success: #16A34A; --warning: #D97706; --weekend-bg: rgba(226, 232, 240, 0.95);
+      --bg-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1920&auto=format&fit=crop');
+    }
+
+    body.theme-e {
+      --primary: #0891B2; --primary-accent: #0E7490; --secondary: #0F172A; --bg: #F8FAFC;
+      --card-bg: rgba(255, 255, 255, 0.97); --border: #CBD5E1; --text: #0F172A; --text-muted: #475569;
+      --danger: #DC2626; --success: #16A34A; --warning: #D97706; --weekend-bg: rgba(226, 232, 240, 0.95);
+      --bg-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1920&auto=format&fit=crop');
+    }
+
+    body.theme-f {
+      --primary: #002B49; --primary-accent: #00A3E0; --secondary: #111827; --bg: #F3F4F6;
+      --card-bg: rgba(255, 255, 255, 0.97); --border: #CBD5E1; --text: #0F172A; --text-muted: #475569;
+      --danger: #DC2626; --success: #16A34A; --warning: #D97706; --weekend-bg: rgba(226, 232, 240, 0.95);
+      --bg-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1920&auto=format&fit=crop');
+    }
+
+    body.theme-g {
+      --primary: #007A33; --primary-accent: #005021; --secondary: #113B22; --bg: #F2F7F4;
+      --card-bg: rgba(255, 255, 255, 0.97); --border: #CBD5E1; --text: #14281D; --text-muted: #475569;
+      --danger: #DC2626; --success: #16A34A; --warning: #D97706; --weekend-bg: rgba(226, 232, 240, 0.95);
+      --bg-image: url('https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=1920&auto=format&fit=crop');
+    }
+
+    body.theme-h {
+      --primary: #EA580C; --primary-accent: #C2410C; --secondary: #1E1B4B; --bg: #EEF2FF;
+      --card-bg: rgba(255, 255, 255, 0.97); --border: #CBD5E1; --text: #0F172A; --text-muted: #475569;
+      --danger: #DC2626; --success: #16A34A; --warning: #D97706; --weekend-bg: rgba(224, 231, 255, 0.95);
+      --bg-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1920&auto=format&fit=crop');
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+    
+    body { 
+      background-color: var(--bg); 
+      background-image: linear-gradient(rgba(244, 244, 244, 0.85), rgba(244, 244, 244, 0.85)), var(--bg-image);
+      background-size: cover; background-position: center; background-attachment: fixed;
+      color: var(--text); margin: 0; padding: 24px; transition: all 0.4s ease; 
+    }
+    
+    .container { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    
+    /* OVERLAY E PAINEL ESTRUTURADO DE LOGIN */
+    .auth-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(12px);
+      display: flex; justify-content: center; align-items: center; z-index: 9999;
+      padding: 16px;
+    }
+
+    .login-panel {
+      background: #FFFFFF; width: 100%; max-width: 450px; border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); border: 1px solid var(--border);
+      border-top: 6px solid var(--primary); overflow: hidden; display: flex; flex-direction: column;
+    }
+
+    .login-panel-header {
+      background: #F8FAFC; padding: 24px 32px 16px 32px; text-align: center; border-bottom: 1px solid #E2E8F0;
+    }
+    .login-panel-header h2 { margin: 0; color: var(--secondary); font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+    .login-panel-header p { margin: 6px 0 0 0; color: var(--text-muted); font-size: 0.88rem; }
+    .login-panel-body { padding: 32px; display: flex; flex-direction: column; gap: 20px; }
+
+    .auth-field { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+    .auth-field label { font-size: 0.75rem; font-weight: 700; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+    .auth-field input, .auth-field select { padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-weight: 700; font-size: 0.95rem; color: #334155; }
+    .auth-field input:focus, .auth-field select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.15); }
+
+    /* CAMPO DE SENHA COM OLHO PRETO E BRANCO */
+    .password-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
+    .password-wrapper input { width: 100%; padding-right: 44px; text-align: left !important; }
+    .toggle-password-btn {
+      position: absolute; right: 10px; background: transparent; border: none;
+      cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;
+      opacity: 0.75; transition: opacity 0.2s;
+    }
+    .toggle-password-btn:hover { opacity: 1; }
+    .toggle-password-btn svg { width: 22px; height: 22px; fill: #1E293B; }
+
+    .btn-auth {
+      padding: 14px; background: var(--primary); color: #FFFFFF; border: none;
+      border-radius: 6px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: background 0.2s; width: 100%; margin-top: 4px;
+      box-shadow: 0 4px 10px rgba(199, 70, 52, 0.25);
+    }
+    .btn-auth:hover { background: var(--primary-accent); }
+    .auth-toggle { text-align: center; font-size: 0.88rem; color: var(--primary); cursor: pointer; font-weight: 700; text-decoration: underline; margin-top: 4px; }
+
+    .admin-modal {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px);
+      display: flex; justify-content: center; align-items: center; z-index: 9998;
+    }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+    .status-online { background: #DCFCE7; color: #166534; }
+    .status-offline { background: #F1F5F9; color: #64748B; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot-online { background: #22C55E; }
+    .dot-offline { background: #94A3B8; }
+
+    /* Cabeçalho */
+    .header-bar {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+      border-bottom: 3px solid var(--primary); background: var(--card-bg); padding: 16px 20px;
+      border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); backdrop-filter: blur(8px);
+    }
+    h1 { color: var(--secondary); margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+    .selectors-group { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+    .selector-box {
+      display: flex; align-items: center; gap: 8px; background: #FFFFFF; padding: 6px 12px;
+      border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); height: 38px;
+    }
+    .selector-box label { font-weight: 700; color: var(--secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    .selector-box select { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-weight: 700; color: var(--primary); background: #ffffff; cursor: pointer; outline: none; height: 28px; }
+
+    .btn-excel {
+      padding: 0 16px; height: 38px; font-weight: 700; font-size: 0.8rem; border: 1px solid var(--border);
+      border-radius: 4px; cursor: pointer; background: #FFFFFF; color: var(--secondary); box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+    }
+    .btn-excel:hover { background: var(--primary); color: #ffffff; }
+
+    .btn-print { background: var(--secondary); color: #FFFFFF; border-color: var(--secondary); }
+    .btn-print:hover { background: #0F172A; color: #FFFFFF; }
+
+    .btn-lock { height: 38px; padding: 0 14px; border-radius: 4px; font-weight: 700; font-size: 0.8rem; border: 1px solid var(--border); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-lock.locked { background: #FEF2F2; color: var(--danger); border-color: #FCA5A5; }
+    .btn-lock.unlocked { background: #F0FDF4; color: var(--success); border-color: #86EFAC; }
+
+    .user-badge { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; color: var(--secondary); background: #FFFFFF; padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; height: 38px; }
+    .btn-logout { background: transparent; border: none; color: var(--danger); font-weight: 700; cursor: pointer; margin-left: 4px; }
+    .btn-admin-panel { background: var(--primary); color: #FFFFFF; border: none; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; cursor: pointer; }
+
+    .tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 2px solid var(--border); padding-bottom: 0; }
+    .tab-btn { padding: 10px 16px; border: 1px solid var(--border); border-bottom: none; background: rgba(225, 231, 239, 0.95); color: var(--secondary); font-weight: 700; font-size: 0.85rem; border-radius: 4px 4px 0 0; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; }
+    .tab-btn:hover { background: #CBD5E1; color: var(--text); }
+    .tab-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+    .tab-btn.dashboard-tab { background: var(--secondary); color: #ffffff; border-color: var(--secondary); }
+    .tab-btn.dashboard-tab.active { background: var(--primary); border-color: var(--primary); }
+
+    .config-panel {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); border-left: 5px solid var(--primary); backdrop-filter: blur(8px);
+    }
+    .config-group { display: flex; flex-direction: column; gap: 6px; }
+    .config-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
+    .config-group input { padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 4px; font-weight: 700; color: var(--secondary); background: #FFFFFF; transition: all 0.2s; width: 100%; text-align: right; }
+    .config-group input:disabled { background: #F1F5F9; color: #64748B; cursor: not-allowed; }
+
+    /* LAYOUT REFORMULADO DOS PAINÉIS/CARDS DA VISÃO MENSAL E ANUAL */
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg); padding: 16px 18px; border-radius: 8px; border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s;
+      display: flex; flex-direction: column; justify-content: space-between; min-height: 92px; backdrop-filter: blur(8px);
+      border-left: 4px solid var(--secondary);
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+    .card h3 { margin: 0 0 6px 0; font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.6px; line-height: 1.2; }
+    .card p { margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--secondary); word-break: break-word; }
+
+    .card-primary { border-left-color: var(--primary); }
+    .card-danger { border-left-color: var(--danger); }
+    .card-danger p { color: var(--danger); }
+    .card-warning { border-left-color: var(--warning); }
+    .card-warning p { color: var(--warning); }
+    .card-success { border-left-color: var(--success); background: rgba(220, 252, 231, 0.6); }
+    .card-success p { color: var(--success); }
+
+    .dashboard-grid { display: flex; flex-direction: column; gap: 20px; }
+    .dashboard-section-title { font-size: 0.85rem; font-weight: 800; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .dashboard-cards-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+
+    .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 20px; }
+    .chart-card { background: var(--card-bg); padding: 20px; border-radius: 6px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.06); backdrop-filter: blur(8px); }
+    .chart-card h3 { margin: 0 0 12px 0; font-size: 0.85rem; color: var(--secondary); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; border-bottom: 2px solid #E2E8F0; padding-bottom: 6px; }
+
+    .table-container { overflow-x: auto; background: var(--card-bg); border-radius: 6px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.06); backdrop-filter: blur(8px); }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.85rem; vertical-align: middle; }
+    th { background: #E2E8F0; color: var(--secondary); font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; white-space: nowrap; }
+    
+    td.col-date, th.col-date { text-align: center; width: 140px; font-weight: 600; }
+    td.col-num, th.col-num { text-align: right; font-weight: 600; }
+    td.col-input, th.col-input { text-align: right; width: 220px; }
+
+    input[type="text"] { width: 100%; padding: 6px 10px; border: 1.5px solid var(--border); border-radius: 4px; font-weight: 700; color: var(--text); text-align: right; background: #FFFFFF; }
+    input[type="text"]:disabled { background: #F1F5F9; color: #64748B; cursor: not-allowed; }
+
+    .weekend { background-color: var(--weekend-bg); color: var(--text-muted); }
+    .hidden { display: none !important; }
+
+    .print-header { display: none; }
+
+    footer { text-align: center; padding: 14px 0; margin-top: 10px; font-size: 0.85rem; font-weight: 700; color: var(--secondary); border-top: 1px solid var(--border); background: var(--card-bg); border-radius: 6px; }
+
+    @media print {
+      @page { size: A4 landscape; margin: 8mm; }
+      body { background: #FFFFFF !important; background-image: none !important; color: #000000 !important; padding: 0 !important; font-size: 11pt; }
+      .auth-overlay, .admin-modal, .selectors-group, .tabs, footer, .btn-print, .btn-excel, .btn-lock, .user-badge { display: none !important; }
+      .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; gap: 14px !important; }
+      
+      .header-bar { display: none !important; }
+
+      .print-header {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid #1E293B;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+      }
+      .print-header-left h2 { margin: 0; font-size: 1.4rem; color: #1E293B; font-weight: 800; }
+      .print-header-left p { margin: 4px 0 0 0; font-size: 0.85rem; color: #475569; font-weight: 600; }
+      .print-header-right { text-align: right; font-size: 0.8rem; color: #64748B; line-height: 1.4; }
+
+      .card, .chart-card, .config-panel, .table-container {
+        box-shadow: none !important;
+        border: 1px solid #CBD5E1 !important;
+        background: #FFFFFF !important;
+        break-inside: avoid;
+        border-radius: 4px !important;
+      }
+
+      .dashboard { grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; }
+      .card { min-height: auto !important; padding: 10px !important; }
+      .card h3 { font-size: 0.65rem !important; }
+      .card p { font-size: 1rem !important; }
+
+      table { font-size: 0.78rem !important; width: 100% !important; border-collapse: collapse !important; }
+      th { background: #1E293B !important; color: #FFFFFF !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      tr:nth-child(even) { background: #F8FAFC !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      th, td { padding: 6px 8px !important; border: 1px solid #CBD5E1 !important; }
+      input[type="text"] { border: none !important; background: transparent !important; padding: 0 !important; font-weight: 700 !important; }
+    }
+  </style>
+</head>
+<body class="theme-a">
+
+<!-- TELA DE SAÍDA / ENCERRAMENTO -->
+<div id="goodbye-modal" class="auth-overlay hidden">
+  <div class="login-panel" style="max-width: 400px;">
+    <div class="login-panel-header">
+      <h2>👋 Obrigado!</h2>
+      <p style="font-weight: 700; color: var(--secondary); font-size: 1rem; margin-top: 4px;">Até a Próxima</p>
+    </div>
+    <div class="login-panel-body">
+      <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin: 0;">Sua sessão foi encerrada. É necessário realizar o login novamente para acessar o aplicativo.</p>
+      <button class="btn-auth" onclick="reiniciarLogin()">Fazer Login Novamente</button>
+    </div>
+  </div>
+</div>
+
+<!-- TELA DE AUTENTICAÇÃO / LOGIN APRESENTADA EM PAINEL -->
+<div id="auth-modal" class="auth-overlay hidden">
+  <div class="login-panel" id="card-login">
+    <div class="login-panel-header">
+      <h2>Acesso ao Sistema</h2>
+      <p>Informe seus dados de usuário para continuar</p>
+    </div>
+    <div class="login-panel-body">
+      <div class="auth-field">
+        <label for="login-user">Usuário</label>
+        <input type="text" id="login-user" placeholder="Digite seu usuário" style="text-align: left;">
+      </div>
+      <div class="auth-field">
+        <label for="login-pass">Senha</label>
+        <div class="password-wrapper">
+          <input type="password" id="login-pass" placeholder="••••••••" style="text-align: left !important;">
+          <button type="button" class="toggle-password-btn" onclick="alternarVisibilidadeSenha('login-pass', this)" title="Exibir/Ocultar Senha">
+            <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn-auth" onclick="autenticarUsuario()">Entrar no Sistema</button>
+      <div class="auth-toggle" onclick="alternarTelaAuth('register')">Novo usuário? Cadastre-se aqui</div>
+    </div>
+  </div>
+
+  <div class="login-panel hidden" id="card-register">
+    <div class="login-panel-header">
+      <h2>Novo Cadastro</h2>
+      <p>Crie sua conta para utilizar a plataforma</p>
+    </div>
+    <div class="login-panel-body">
+      <div class="auth-field">
+        <label for="reg-name">Nome Completo</label>
+        <input type="text" id="reg-name" placeholder="Ex: Edmar Ribeiro" style="text-align: left;">
+      </div>
+      <div class="auth-field">
+        <label for="reg-user">Usuário de Acesso</label>
+        <input type="text" id="reg-user" placeholder="Ex: edmar.ribeiro" style="text-align: left;">
+      </div>
+      <div class="auth-field">
+        <label for="reg-pass">Senha</label>
+        <div class="password-wrapper">
+          <input type="password" id="reg-pass" placeholder="Digite uma senha segura" style="text-align: left !important;">
+          <button type="button" class="toggle-password-btn" onclick="alternarVisibilidadeSenha('reg-pass', this)" title="Exibir/Ocultar Senha">
+            <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn-auth" onclick="cadastrarUsuario()">Criar Minha Conta</button>
+      <div class="auth-toggle" onclick="alternarTelaAuth('login')">Já possui conta? Voltar ao login</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAINEL DE GERENCIAMENTO ADMIN E USUÁRIOS LOGADOS -->
+<div id="modal-admin-panel" class="admin-modal hidden">
+  <div class="login-panel" style="max-width:700px;">
+    <div class="login-panel-header">
+      <h2>👥 Gestão de Usuários & Status em Tempo Real</h2>
+      <p>Painel de Controle Administrador</p>
+    </div>
+    <div class="login-panel-body">
+      <div class="auth-field" style="margin-bottom: 10px;">
+        <label>Sincronização de Planilhas Excel de Backup:</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="backup-path-input" placeholder="Nenhum arquivo selecionado" readonly style="text-align:left; background:#F8FAFC;">
+          <button onclick="document.getElementById('input-file-backup-multi').click()" style="padding: 8px 12px; background:var(--primary); color:#FFF; border:none; border-radius:4px; font-weight:700; cursor:pointer; white-space:nowrap;">📁 Selecionar Arquivos Excel</button>
+          <input type="file" id="input-file-backup-multi" accept=".xlsx, .xls" multiple style="display: none;" onchange="processarSelecaoArquivosBackup(event)">
+        </div>
+      </div>
+      
+      <div class="table-container" style="max-height:220px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome Completo</th>
+              <th>Usuário</th>
+              <th>Perfil</th>
+              <th>Status</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="admin-user-list"></tbody>
+        </table>
+      </div>
+
+      <button class="btn-auth" style="background:var(--secondary);" onclick="fecharModalAdmin()">Fechar Painel</button>
+    </div>
+  </div>
+</div>
+
+<div class="container hidden" id="app-container">
+  <!-- CABEÇALHO ELEGANTE PARA RELATÓRIO IMPRESSO EM PDF (SEM NOME DE RESPONSÁVEL) -->
+  <div class="print-header">
+    <div class="print-header-left">
+      <h2>🏢 RELATÓRIO EXECUTIVO DE FATURAMENTO E PRODUÇÃO</h2>
+      <p id="print-period-info">Período de Análise do Sistema ERP</p>
+    </div>
+    <div class="print-header-right">
+      <span>Emissão: <strong id="print-date">00/00/0000</strong></span>
+    </div>
+  </div>
+
+  <div class="header-bar">
+    <h1>Acompanhamento de Faturamento e Produção</h1>
+    <div class="selectors-group">
+      <button class="btn-excel btn-print" onclick="imprimirRelatorioGeral()">🖨️ Visualização Geral e Impressão</button>
+      <button id="btn-lock-toggle" class="btn-lock locked" onclick="solicitarDesbloqueioEdicao()">🔒 Edição Bloqueada</button>
+
+      <div class="user-badge" id="user-badge">
+        <span>👤 <span id="user-name-display">Usuário</span> <span id="admin-tag" style="color:var(--primary); font-size:0.75rem;">[Admin]</span></span>
+        <button class="btn-admin-panel hidden" id="btn-open-admin" onclick="abrirModalAdmin()">👥 Ver Usuários</button>
+        <button class="btn-logout" onclick="logoutUsuario()">[ Sair ]</button>
+      </div>
+
+      <button class="btn-excel" id="btn-export-excel" onclick="exportarExcelCompleto()">📤 Exportar Todos os Anos em Excel</button>
+      <button class="btn-excel" id="btn-import-excel" onclick="sincronizarOuImportarExcel()">🔄 Atualizar</button>
+      <input type="file" id="input-file-excel" accept=".xlsx, .xls" multiple style="display: none;" onchange="importarExcelCompleto(event)">
+
+      <div class="selector-box">
+        <label for="select-tema">Tema:</label>
+        <select id="select-tema" onchange="mudarTema(this.value)">
+          <option value="a" selected>A</option>
+          <option value="b">B</option>
+          <option value="c">C</option>
+          <option value="d">D</option>
+          <option value="e">E</option>
+          <option value="f">F</option>
+          <option value="g">G</option>
+          <option value="h">H</option>
+        </select>
+      </div>
+
+      <div class="selector-box">
+        <label for="select-ano">Ano:</label>
+        <select id="select-ano" onchange="mudarAno(this.value)">
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+          <option value="2027">2027</option>
+          <option value="2028">2028</option>
+          <option value="2029">2029</option>
+          <option value="2030">2030</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs-container"></div>
+
+  <!-- VISÃO MENSAL ORGANIZADA EM PAINÉIS GRID ESTILO BOTÕES -->
+  <div id="view-monthly" style="display: flex; flex-direction: column; gap: 20px;">
+    <div class="config-panel">
+      <div class="config-group">
+        <label for="cfg-programado">Programado (R$):</label>
+        <input type="text" id="cfg-programado" onchange="salvarConfiguracao()" placeholder="0,00">
+      </div>
+      <div class="config-group">
+        <label for="cfg-programado-kg">Programado (kg):</label>
+        <input type="text" id="cfg-programado-kg" onchange="salvarConfiguracao()" placeholder="0,00">
+      </div>
+      <div class="config-group">
+        <label for="cfg-realizado-kg">Faturado (kg):</label>
+        <input type="text" id="cfg-realizado-kg" onchange="salvarConfiguracao()" placeholder="0,00">
+      </div>
+      <div class="config-group">
+        <label for="cfg-dias-uteis">Dias Úteis do Mês:</label>
+        <input type="text" id="cfg-dias-uteis" onchange="salvarConfiguracao()" placeholder="Ex: 22" style="text-align: left;">
+      </div>
+      <div class="config-group">
+        <label for="cfg-custos">Custos Totais (R$):</label>
+        <input type="text" id="cfg-custos" onchange="salvarConfiguracao()" placeholder="0,00">
+      </div>
+      <div class="config-group">
+        <label for="cfg-imposto">Alíquota Imposto (%):</label>
+        <input type="text" id="cfg-imposto" onchange="salvarConfiguracao()" placeholder="Ex: 27,25">
+      </div>
+    </div>
+
+    <!-- PAINEL DE CARDS ORGANIZADOS EM GRID LADO A LADO -->
+    <div class="dashboard">
+      <div class="card card-primary"><h3>(+) Programado (R$)</h3><p id="card-programado">R$ 0,00</p></div>
+      <div class="card"><h3>(+) Programado (kg)</h3><p id="card-programado-kg">0,00 kg</p></div>
+      <div class="card"><h3>Faturado (kg)</h3><p id="card-realizado-kg">0,00 kg</p></div>
+      <div class="card card-danger"><h3>Falta Atingir Meta Produção</h3><p id="card-restante-kg">0,00 kg</p></div>
+      <div class="card card-success"><h3>Atingido Produção (%)</h3><p id="card-porcentagem-kg">0,00%</p></div>
+      <div class="card card-primary"><h3>Realizado (R$)</h3><p id="card-realizado">R$ 0,00</p></div>
+      <div class="card card-warning"><h3>(-) Impostos Calc.</h3><p id="card-impostos">R$ 0,00</p></div>
+      <div class="card card-warning"><h3>(-) Custos Totais</h3><p id="card-custos">R$ 0,00</p></div>
+      <div class="card card-primary"><h3>Realizado Líquido</h3><p id="card-liquido">R$ 0,00</p></div>
+      <div class="card card-danger"><h3>Falta Atingir Meta Faturamento</h3><p id="card-restante">R$ 0,00</p></div>
+      <div class="card card-success"><h3>Atingido Faturamento (%)</h3><p id="card-porcentagem">0,00%</p></div>
+    </div>
+
+    <div class="charts-container">
+      <div class="chart-card">
+        <h3>Faturamento Diário vs Meta Diária</h3>
+        <canvas id="chartDaily"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Evolução do Faturamento Acumulado</h3>
+        <canvas id="chartAccumulated"></canvas>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-date">Dia</th>
+            <th class="col-input">Faturamento Diário (R$)</th>
+            <th class="col-num">Acumulado (R$)</th>
+            <th class="col-num">Esperado Acumulado (R$)</th>
+            <th class="col-num">Meta Atingida (%)</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VISÃO DASHBOARD ANUAL CONSOLIDADO - TOTALMENTE DISTRIBUÍDO -->
+  <div id="view-dashboard" class="hidden" style="display: flex; flex-direction: column; gap: 24px;">
+    <div class="dashboard-grid">
+      <!-- Bloco 1: Indicadores Financeiros -->
+      <div class="dashboard-section-title">💵 Indicadores Financeiros do Ano</div>
+      <div class="dashboard-cards-row">
+        <div class="card card-highlight"><h3>Total Programado (R$) Ano</h3><p id="dash-programado">R$ 0,00</p></div>
+        <div class="card card-highlight"><h3>Faturamento Realizado Ano</h3><p id="dash-realizado" style="color: var(--primary);">R$ 0,00</p></div>
+        <div class="card card-warning"><h3>Total Impostos Ano</h3><p id="dash-impostos">R$ 0,00</p></div>
+        <div class="card card-warning"><h3>Total Custos Ano</h3><p id="dash-custos">R$ 0,00</p></div>
+        <div class="card card-highlight"><h3>Realizado Líquido Ano</h3><p id="dash-liquido">R$ 0,00</p></div>
+      </div>
+
+      <!-- Bloco 2: Indicadores de Produção -->
+      <div class="dashboard-section-title" style="margin-top: 10px;">📦 Indicadores de Produção (kg)</div>
+      <div class="dashboard-cards-row">
+        <div class="card"><h3>Total Programado (kg) Ano</h3><p id="dash-programado-kg">0,00 kg</p></div>
+        <div class="card"><h3>Total Faturado (kg) Ano</h3><p id="dash-realizado-kg">0,00 kg</p></div>
+        <div class="card card-danger"><h3>Falta Atingir Produção Ano</h3><p id="dash-restante-kg">0,00 kg</p></div>
+      </div>
+
+      <!-- Bloco 3: Percentuais de Desempenho -->
+      <div class="dashboard-section-title" style="margin-top: 10px;">🎯 Desempenho do Período (%)</div>
+      <div class="dashboard-cards-row">
+        <div class="card card-success"><h3>Atingido Produção Ano (%)</h3><p id="dash-porcentagem-kg">0,00%</p></div>
+        <div class="card card-success"><h3>Atingido Faturamento Ano (%)</h3><p id="dash-porcentagem">0,00%</p></div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-container">
+      <div class="chart-card">
+        <h3 id="title-annual-monthly">Faturamento Mensal Comparativo</h3>
+        <canvas id="chartAnnualMonthly"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Evolução do Faturamento Acumulado no Ano</h3>
+        <canvas id="chartAnnualAccumulated"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabela do Resumo Anual -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-date">Mês</th>
+            <th class="col-num">Programado (R$)</th>
+            <th class="col-num">Programado (kg)</th>
+            <th class="col-num">Faturado (kg)</th>
+            <th class="col-num">Falta Produção (kg)</th>
+            <th class="col-num">Atingido Produção (%)</th>
+            <th class="col-num">Faturamento Realizado (R$)</th>
+            <th class="col-num">Impostos (R$)</th>
+            <th class="col-num">Custos (R$)</th>
+            <th class="col-num">Realizado Líquido (R$)</th>
+            <th class="col-num">Atingido Faturamento (%)</th>
+          </tr>
+        </thead>
+        <tbody id="dash-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Criado por Edmar
+  </footer>
+</div>
+
+<script>
+  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  const anosDisponiveis = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
+  let anoAtual = 2026;
+  let abaAtual = 0; 
+  let temaAtual = 'a';
+  let modoEdicaoLiberado = false;
+
+  let dailyChartInstance = null;
+  let accumulatedChartInstance = null;
+  let annualMonthlyChartInstance = null;
+  let annualAccumulatedChartInstance = null;
+
+  const svgEyeOpen = `<svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
+  const svgEyeClosed = `<svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.17c0-1.66-1.34-3-3-3l-.17.02z"/></svg>`;
+
+  /* PREPARA O CABEÇALHO DA IMPRESSÃO COM DATA E NOME DO RELATÓRIO */
+  function imprimirRelatorioGeral() {
+    const dataAtual = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
+    document.getElementById('print-date').innerText = dataAtual;
+    
+    if (abaAtual === 'dash') {
+      document.getElementById('print-period-info').innerText = `Consolidado Anual de Faturamento e Produção - Ano ${anoAtual}`;
+    } else {
+      document.getElementById('print-period-info').innerText = `Acompanhamento Mensal de ${meses[abaAtual]}/${anoAtual}`;
+    }
+
+    window.print();
+  }
+
+  function alternarVisibilidadeSenha(idCampo, btn) {
+    const input = document.getElementById(idCampo);
+    if (input.type === "password") {
+      input.type = "text";
+      btn.innerHTML = svgEyeClosed;
+    } else {
+      input.type = "password";
+      btn.innerHTML = svgEyeOpen;
+    }
+  }
+
+  function limparCamposAuth() {
+    const userInputLogin = document.getElementById('login-user');
+    userInputLogin.value = '';
+
+    const passInputLogin = document.getElementById('login-pass');
+    passInputLogin.value = '';
+    passInputLogin.type = 'password';
+
+    document.getElementById('reg-name').value = '';
+    document.getElementById('reg-user').value = '';
+
+    const passInputReg = document.getElementById('reg-pass');
+    passInputReg.value = '';
+    passInputReg.type = 'password';
+
+    document.querySelectorAll('.toggle-password-btn').forEach(btn => btn.innerHTML = svgEyeOpen);
+  }
+
+  function inicializarAdminMaster() {
+    let usuariosBase = JSON.parse(localStorage.getItem('usuarios_base')) || {};
+    
+    usuariosBase['EDMAR.RIBEIRO'] = { 
+      nome: 'Edmar Ribeiro (Administrador Master)', 
+      usuario: 'EDMAR.RIBEIRO', 
+      senha: '@Eddy3000@', 
+      is_admin: true 
+    };
+    
+    localStorage.setItem('usuarios_base', JSON.stringify(usuariosBase));
+  }
+
+  function verificarSessaoUsuario() {
+    inicializarAdminMaster();
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuario_sessao'));
+    const modalAuth = document.getElementById('auth-modal');
+    const appContainer = document.getElementById('app-container');
+
+    limparCamposAuth();
+
+    if (!usuarioLogado) {
+      modalAuth.classList.remove('hidden');
+      appContainer.classList.add('hidden');
+      modoEdicaoLiberado = false;
+    } else {
+      modalAuth.classList.add('hidden');
+      appContainer.classList.remove('hidden');
+      document.getElementById('user-name-display').innerText = usuarioLogado.nome;
+      
+      const eAdmin = (usuarioLogado.is_admin || usuarioLogado.usuario === 'EDMAR.RIBEIRO');
+
+      if (eAdmin) {
+        document.getElementById('admin-tag').classList.remove('hidden');
+        document.getElementById('btn-open-admin').classList.remove('hidden');
+        document.getElementById('btn-export-excel').classList.remove('hidden');
+        document.getElementById('btn-import-excel').innerText = '📥 Importar Planilhas Excel';
+        modoEdicaoLiberado = true;
+      } else {
+        document.getElementById('admin-tag').classList.add('hidden');
+        document.getElementById('btn-open-admin').classList.add('hidden');
+        document.getElementById('btn-export-excel').classList.add('hidden');
+        document.getElementById('btn-import-excel').innerText = '🔄 Atualizar';
+        modoEdicaoLiberado = false;
+      }
+
+      atualizarHeartbeatUsuario(usuarioLogado.usuario);
+      atualizarEstadoInterfaceEdicao();
+    }
+  }
+
+  function processarSelecaoArquivosBackup(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    let arquivosNomes = [];
+    let lidos = 0;
+
+    Array.from(files).forEach(file => {
+      arquivosNomes.push(file.name);
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          processarEGravarWorkbook(workbook);
+          lidos++;
+
+          if (lidos === files.length) {
+            carregarView();
+            const resumo = `[ ${files.length} arquivo(s) selecionado(s): ${arquivosNomes.join(', ')} ]`;
+            document.getElementById('backup-path-input').value = resumo;
+            localStorage.setItem('caminho_pasta_backup', resumo);
+            alert(`📁 Planilhas Excel processadas e importadas com sucesso!`);
+          }
+        } catch (err) {
+          alert(`Erro ao ler o arquivo Excel: ${file.name}`);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function processarEGravarWorkbook(workbook) {
+    workbook.SheetNames.forEach(sheetName => {
+      let mesEncontrado = -1;
+      let anoEncontrado = anoAtual;
+
+      meses.forEach((mes, idx) => {
+        if (sheetName.startsWith(mes)) {
+          mesEncontrado = idx;
+          const partes = sheetName.split('_');
+          if (partes.length > 1) {
+            const parsedAno = parseInt(partes[1]);
+            if (!isNaN(parsedAno)) anoEncontrado = parsedAno;
+          }
+        }
+      });
+
+      if (mesEncontrado !== -1) {
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        const dadosSalvos = {};
+        let configObj = null;
+
+        jsonData.forEach(row => {
+          if (row["Data"]) {
+            const dia = parseInt(String(row["Data"]).split('/')[0]);
+            if (dia >= 1 && dia <= 31) {
+              dadosSalvos[dia] = {
+                faturamento: parseBrValue(row["Faturamento Diário (R$)"])
+              };
+            }
+          }
+
+          if (!configObj && row["Param_Programado_R$"] !== undefined) {
+            configObj = {
+              programado: parseBrValue(row["Param_Programado_R$"]),
+              programadoKg: parseBrValue(row["Param_Programado_Kg"]),
+              realizadoKg: parseBrValue(row["Param_Realizado_Kg"]),
+              diasUteis: parseInt(row["Param_Dias_Uteis"]) || 22,
+              custos: parseBrValue(row["Param_Custos_R$"]),
+              impostoPct: parseBrValue(row["Param_Imposto_Pct"])
+            };
+          }
+        });
+
+        localStorage.setItem(`faturamento_${anoEncontrado}_${mesEncontrado}`, JSON.stringify(dadosSalvos));
+        if (configObj) {
+          localStorage.setItem(`config_${anoEncontrado}_${mesEncontrado}`, JSON.stringify(configObj));
+        }
+      }
+    });
+
+    if (workbook.SheetNames.includes("Dashboard_Consolidado")) {
+      const worksheetDash = workbook.Sheets["Dashboard_Consolidado"];
+      const rowsConsolidadas = XLSX.utils.sheet_to_json(worksheetDash);
+
+      rowsConsolidadas.forEach(row => {
+        const ano = parseInt(row["Ano"]);
+        const mesTxt = row["Mês"];
+        const mesIdx = meses.indexOf(mesTxt);
+
+        if (!isNaN(ano) && mesIdx !== -1) {
+          const configObj = {
+            programado: parseBrValue(row["Programado (R$)"]),
+            programadoKg: parseBrValue(row["Programado (kg)"]),
+            realizadoKg: parseBrValue(row["Faturado (kg)"]),
+            diasUteis: 22,
+            custos: parseBrValue(row["Custos Totais (R$)"]),
+            impostoPct: parseBrValue(row["Impostos (R$)"]) > 0 && parseBrValue(row["Faturamento Realizado (R$)"]) > 0 ? 
+                         (parseBrValue(row["Impostos (R$)"]) / parseBrValue(row["Faturamento Realizado (R$)"])) * 100 : 0
+          };
+          localStorage.setItem(`config_${ano}_${mesIdx}`, JSON.stringify(configObj));
+        }
+      });
+    }
+  }
+
+  function sincronizarOuImportarExcel() {
+    const inputExcel = document.getElementById('input-file-excel');
+    alert("📁 Por favor, selecione o arquivo 'Faturamento_Consolidado_Todos_Anos.xlsx' para atualizar o sistema.");
+    inputExcel.click();
+  }
+
+  function importarExcelCompleto(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    let lidos = 0;
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+
+          processarEGravarWorkbook(workbook);
+          lidos++;
+
+          if (lidos === files.length) {
+            carregarView();
+            alert(`Planilha Consolidada "${file.name}" importada e atualizada com sucesso em todos os anos!`);
+          }
+        } catch (err) {
+          alert(`Erro ao ler o arquivo Excel: ${file.name}`);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function atualizarHeartbeatUsuario(usuarioKey) {
+    let sessoesAtivas = JSON.parse(localStorage.getItem('sessoes_ativas')) || {};
+    sessoesAtivas[usuarioKey] = Date.now();
+    localStorage.setItem('sessoes_ativas', JSON.stringify(sessoesAtivas));
+  }
+
+  function solicitarDesbloqueioEdicao() {
+    if (modoEdicaoLiberado) {
+      modoEdicaoLiberado = false;
+      alert("Edição bloqueada com sucesso (Modo Somente Leitura).");
+      atualizarEstadoInterfaceEdicao();
+      return;
+    }
+
+    const senhaDigitada = prompt("⚠️ Para desbloquear a edição do arquivo, digite a senha de Administrador:");
+    if (senhaDigitada === "@Eddy3000@") {
+      modoEdicaoLiberado = true;
+      alert("🔓 Edição desbloqueada com sucesso!");
+      atualizarEstadoInterfaceEdicao();
+    } else if (senhaDigitada !== null) {
+      alert("❌ Senha incorreta! O arquivo permanecerá bloqueado para alterações.");
+    }
+  }
+
+  function atualizarEstadoInterfaceEdicao() {
+    const btnLock = document.getElementById('btn-lock-toggle');
+    const btnImport = document.getElementById('btn-import-excel');
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuario_sessao')) || {};
+    const eAdmin = (usuarioLogado.is_admin || usuarioLogado.usuario === 'EDMAR.RIBEIRO');
+
+    if (modoEdicaoLiberado) {
+      btnLock.innerHTML = '🔓 Edição Liberada';
+      btnLock.className = 'btn-lock unlocked';
+      btnImport.disabled = false;
+    } else {
+      btnLock.innerHTML = '🔒 Edição Bloqueada';
+      btnLock.className = 'btn-lock locked';
+      btnImport.disabled = !eAdmin ? false : true;
+    }
+
+    document.querySelectorAll('.config-panel input').forEach(input => input.disabled = !modoEdicaoLiberado);
+    document.querySelectorAll('#table-body input').forEach(input => input.disabled = !modoEdicaoLiberado);
+  }
+
+  function alternarTelaAuth(tela) {
+    limparCamposAuth();
+    if (tela === 'register') {
+      document.getElementById('card-login').classList.add('hidden');
+      document.getElementById('card-register').classList.remove('hidden');
+    } else {
+      document.getElementById('card-register').classList.add('hidden');
+      document.getElementById('card-login').classList.remove('hidden');
+    }
+  }
+
+  function cadastrarUsuario() {
+    const nome = document.getElementById('reg-name').value.trim();
+    const usuario = document.getElementById('reg-user').value.trim().toUpperCase();
+    const senha = document.getElementById('reg-pass').value.trim();
+
+    if (!nome || !usuario || !senha) {
+      alert("Por favor, preencha todos os campos do cadastro.");
+      return;
+    }
+
+    const usuariosBase = JSON.parse(localStorage.getItem('usuarios_base')) || {};
+
+    if (usuariosBase[usuario]) {
+      alert("Este nome de usuário já está cadastrado.");
+      return;
+    }
+
+    usuariosBase[usuario] = { nome: nome, usuario: usuario, senha: senha, is_admin: false };
+    localStorage.setItem('usuarios_base', JSON.stringify(usuariosBase));
+
+    alert("Usuário cadastrado com sucesso!");
+    limparCamposAuth();
+    alternarTelaAuth('login');
+  }
+
+  function autenticarUsuario() {
+    const usuarioInput = document.getElementById('login-user').value.trim().toUpperCase();
+    const senhaInput = document.getElementById('login-pass').value.trim();
+
+    const usuariosBase = JSON.parse(localStorage.getItem('usuarios_base')) || {};
+    const contaEncontrada = usuariosBase[usuarioInput];
+
+    if (contaEncontrada && contaEncontrada.senha === senhaInput) {
+      localStorage.setItem('usuario_sessao', JSON.stringify({ 
+        nome: contaEncontrada.nome, 
+        usuario: contaEncontrada.usuario,
+        is_admin: contaEncontrada.is_admin || contaEncontrada.usuario === 'EDMAR.RIBEIRO'
+      }));
+      
+      limparCamposAuth();
+      verificarSessaoUsuario();
+    } else {
+      alert("Usuário ou senha incorretos.");
+    }
+  }
+
+  function logoutUsuario() {
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuario_sessao'));
+    if (usuarioLogado) {
+      let sessoesAtivas = JSON.parse(localStorage.getItem('sessoes_ativas')) || {};
+      delete sessoesAtivas[usuarioLogado.usuario];
+      localStorage.setItem('sessoes_ativas', JSON.stringify(sessoesAtivas));
+    }
+
+    localStorage.removeItem('usuario_sessao');
+    limparCamposAuth();
+    modoEdicaoLiberado = false;
+    document.getElementById('app-container').classList.add('hidden');
+    document.getElementById('goodbye-modal').classList.remove('hidden');
+  }
+
+  function reiniciarLogin() {
+    document.getElementById('goodbye-modal').classList.add('hidden');
+    limparCamposAuth();
+    verificarSessaoUsuario();
+  }
+
+  function abrirModalAdmin() {
+    const usuarioLogadoAtual = JSON.parse(localStorage.getItem('usuario_sessao')) || {};
+    const eAdmin = (usuarioLogadoAtual.is_admin || usuarioLogadoAtual.usuario === 'EDMAR.RIBEIRO');
+
+    if (!eAdmin) {
+      alert("⚠️ Acesso negado: Apenas administradores podem visualizar os usuários cadastrados e online.");
+      return;
+    }
+
+    document.getElementById('backup-path-input').value = localStorage.getItem('caminho_pasta_backup') || '';
+
+    const tbody = document.getElementById('admin-user-list');
+    tbody.innerHTML = '';
+    
+    const usuariosBase = JSON.parse(localStorage.getItem('usuarios_base')) || {};
+    const sessoesAtivas = JSON.parse(localStorage.getItem('sessoes_ativas')) || {};
+    const agora = Date.now();
+
+    Object.keys(usuariosBase).forEach(key => {
+      const u = usuariosBase[key];
+      
+      const ultimoPing = sessoesAtivas[u.usuario] || 0;
+      const isOnline = (agora - ultimoPing < 120000) || (u.usuario === usuarioLogadoAtual.usuario);
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${u.nome}</b></td>
+        <td>${u.usuario}</td>
+        <td><b>${u.is_admin || u.usuario === 'EDMAR.RIBEIRO' ? 'Administrador' : 'Operador'}</b></td>
+        <td>
+          <span class="status-badge ${isOnline ? 'status-online' : 'status-offline'}">
+            <span class="dot ${isOnline ? 'dot-online' : 'dot-offline'}"></span>
+            ${isOnline ? 'Online agora' : 'Offline'}
+          </span>
+        </td>
+        <td>
+          ${u.usuario !== 'EDMAR.RIBEIRO' ? `<button onclick="removerUsuarioAdmin('${u.usuario}')" style="color:var(--danger); font-weight:700; border:none; background:transparent; cursor:pointer;">Excluir</button>` : '-'}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('modal-admin-panel').classList.remove('hidden');
+  }
+
+  function fecharModalAdmin() {
+    document.getElementById('modal-admin-panel').classList.add('hidden');
+  }
+
+  function removerUsuarioAdmin(usuarioKey) {
+    if (confirm(`Tem certeza que deseja excluir o usuário ${usuarioKey}?`)) {
+      const usuariosBase = JSON.parse(localStorage.getItem('usuarios_base')) || {};
+      delete usuariosBase[usuarioKey];
+      localStorage.setItem('usuarios_base', JSON.stringify(usuariosBase));
+
+      let sessoesAtivas = JSON.parse(localStorage.getItem('sessoes_ativas')) || {};
+      delete sessoesAtivas[usuarioKey];
+      localStorage.setItem('sessoes_ativas', JSON.stringify(sessoesAtivas));
+
+      abrirModalAdmin();
+    }
+  }
+
+  function parseBrValue(val) {
+    if (val === null || val === undefined || val === '') return 0;
+    if (typeof val === 'number') return val;
+    let clean = String(val).replace(/[^0-9,-]/g, '').replace(',', '.');
+    return parseFloat(clean) || 0;
+  }
+
+  function formatBrDisplay(val) {
+    if (!val && val !== 0) return '';
+    return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function formatMoney(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function formatKg(v) { return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kg'; }
+
+  function init() {
+    verificarSessaoUsuario();
+    renderTabs();
+    carregarView();
+
+    setInterval(() => {
+      const usuarioLogado = JSON.parse(localStorage.getItem('usuario_sessao'));
+      if (usuarioLogado) {
+        atualizarHeartbeatUsuario(usuarioLogado.usuario);
+      }
+    }, 30000);
+  }
+
+  function mudarTema(novoTema) {
+    temaAtual = novoTema;
+    document.body.className = `theme-${novoTema}`;
+    carregarView();
+  }
+
+  function mudarAno(novoAno) {
+    anoAtual = parseInt(novoAno);
+    renderTabs();
+    carregarView();
+  }
+
+  function renderTabs() {
+    const tabsContainer = document.getElementById('tabs-container');
+    tabsContainer.innerHTML = '';
+
+    const dashBtn = document.createElement('button');
+    dashBtn.className = `tab-btn dashboard-tab ${abaAtual === 'dash' ? 'active' : ''}`;
+    dashBtn.innerText = `📊 Dashboard Geral ${anoAtual}`;
+    dashBtn.onclick = () => { abaAtual = 'dash'; renderTabs(); carregarView(); };
+    tabsContainer.appendChild(dashBtn);
+
+    meses.forEach((mes, index) => {
+      const btn = document.createElement('button');
+      btn.className = `tab-btn ${abaAtual === index ? 'active' : ''}`;
+      btn.innerText = `${mes}/${anoAtual}`;
+      btn.onclick = () => { abaAtual = index; renderTabs(); carregarView(); };
+      tabsContainer.appendChild(btn);
+    });
+  }
+
+  function carregarView() {
+    if (abaAtual === 'dash') {
+      document.getElementById('view-monthly').classList.add('hidden');
+      document.getElementById('view-dashboard').classList.remove('hidden');
+      document.getElementById('title-annual-monthly').innerText = `Faturamento Mensal (${anoAtual})`;
+      renderDashboardGeral();
+    } else {
+      document.getElementById('view-dashboard').classList.add('hidden');
+      document.getElementById('view-monthly').classList.remove('hidden');
+      carregarConfiguracao();
+      renderTableMensal();
+    }
+  }
+
+  function getDaysInMonth(month, year) { return new Date(year, month + 1, 0).getDate(); }
+
+  function getThemeColors() {
+    const style = getComputedStyle(document.body);
+    return {
+      primary: style.getPropertyValue('--primary').trim(),
+      secondary: style.getPropertyValue('--secondary').trim(),
+      warning: style.getPropertyValue('--warning').trim(),
+      success: style.getPropertyValue('--success').trim(),
+      muted: style.getPropertyValue('--text-muted').trim()
+    };
+  }
+
+  function carregarConfiguracao() {
+    const config = JSON.parse(localStorage.getItem(`config_${anoAtual}_${abaAtual}`)) || { programado: 0, programadoKg: 0, realizadoKg: 0, diasUteis: 22, custos: 0, impostoPct: 0 };
+    document.getElementById('cfg-programado').value = formatBrDisplay(config.programado);
+    document.getElementById('cfg-programado-kg').value = formatBrDisplay(config.programadoKg);
+    document.getElementById('cfg-realizado-kg').value = formatBrDisplay(config.realizadoKg);
+    document.getElementById('cfg-dias-uteis').value = config.diasUteis || '';
+    document.getElementById('cfg-custos').value = formatBrDisplay(config.custos);
+    document.getElementById('cfg-imposto').value = formatBrDisplay(config.impostoPct);
+  }
+
+  function salvarConfiguracao() {
+    if (!modoEdicaoLiberado) {
+      alert("⚠️ O arquivo está em modo de leitura. Clique em '🔒 Edição Bloqueada' para desbloquear.");
+      carregarConfiguracao();
+      return;
+    }
+
+    const config = {
+      programado: parseBrValue(document.getElementById('cfg-programado').value),
+      programadoKg: parseBrValue(document.getElementById('cfg-programado-kg').value),
+      realizadoKg: parseBrValue(document.getElementById('cfg-realizado-kg').value),
+      diasUteis: parseInt(document.getElementById('cfg-dias-uteis').value) || 1,
+      custos: parseBrValue(document.getElementById('cfg-custos').value),
+      impostoPct: parseBrValue(document.getElementById('cfg-imposto').value)
+    };
+    localStorage.setItem(`config_${anoAtual}_${abaAtual}`, JSON.stringify(config));
+    carregarConfiguracao();
+    renderTableMensal();
+  }
+
+  function renderTableMensal() {
+    const totalDias = getDaysInMonth(abaAtual, anoAtual);
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+
+    const config = JSON.parse(localStorage.getItem(`config_${anoAtual}_${abaAtual}`)) || { programado: 0, programadoKg: 0, realizadoKg: 0, diasUteis: 1, custos: 0, impostoPct: 0 };
+    const programado = config.programado;
+    const programadoKg = config.programadoKg || 0;
+    const realizadoKg = config.realizadoKg || 0;
+    const custosTotais = config.custos || 0;
+    const diasUteis = config.diasUteis > 0 ? config.diasUteis : 1;
+    const impostoPct = config.impostoPct / 100;
+
+    let acumulado = 0, diasUteisDecorridos = 0;
+    const metaDiariaUtil = programado / diasUteis;
+    const dadosSalvos = JSON.parse(localStorage.getItem(`faturamento_${anoAtual}_${abaAtual}`)) || {};
+
+    const labels = [], dataDiario = [], dataMetaDiaria = [], dataAcumulado = [], dataEsperadoAcumulado = [];
+
+    for (let dia = 1; dia <= totalDias; dia++) {
+      const registro = dadosSalvos[dia] || {};
+      const valorDiario = parseBrValue(registro.faturamento);
+      acumulado += valorDiario;
+
+      const isWeekend = (new Date(anoAtual, abaAtual, dia).getDay() % 6 === 0);
+      if (!isWeekend) diasUteisDecorridos++;
+
+      const esperadoAcumulado = metaDiariaUtil * Math.min(diasUteisDecorridos, diasUteis);
+      const metaPorcentagem = programado > 0 ? (acumulado / programado) * 100 : 0;
+
+      labels.push(`Dia ${dia}`);
+      dataDiario.push(valorDiario);
+      dataMetaDiaria.push(isWeekend ? 0 : metaDiariaUtil);
+      dataAcumulado.push(acumulado);
+      dataEsperadoAcumulado.push(esperadoAcumulado);
+
+      const tr = document.createElement('tr');
+      if (isWeekend) tr.className = 'weekend';
+      tr.innerHTML = `
+        <td class="col-date">${String(dia).padStart(2, '0')}/${String(abaAtual + 1).padStart(2, '0')}/${anoAtual} ${isWeekend ? '(FDS)' : ''}</td>
+        <td class="col-input"><input type="text" value="${formatBrDisplay(valorDiario)}" placeholder="0,00" onchange="salvarValor(${dia}, 'faturamento', this.value)" ${!modoEdicaoLiberado ? 'disabled' : ''} /></td>
+        <td class="col-num">${formatMoney(acumulado)}</td>
+        <td class="col-num">${formatMoney(esperadoAcumulado)}</td>
+        <td class="col-num">${metaPorcentagem.toFixed(2)}%</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    const totalImpostos = acumulado * impostoPct;
+    const realizadoLiquido = acumulado - totalImpostos - custosTotais;
+    const pctProducao = programadoKg > 0 ? (realizadoKg / programadoKg) * 100 : 0;
+
+    document.getElementById('card-programado').innerText = formatMoney(programado);
+    document.getElementById('card-programado-kg').innerText = formatKg(programadoKg);
+    document.getElementById('card-realizado-kg').innerText = formatKg(realizadoKg);
+    document.getElementById('card-restante-kg').innerText = formatKg(Math.max(0, programadoKg - realizadoKg));
+    document.getElementById('card-porcentagem-kg').innerText = `${pctProducao.toFixed(2)}%`;
+
+    document.getElementById('card-realizado').innerText = formatMoney(acumulado);
+    document.getElementById('card-impostos').innerText = formatMoney(totalImpostos);
+    document.getElementById('card-custos').innerText = formatMoney(custosTotais);
+    document.getElementById('card-liquido').innerText = formatMoney(realizadoLiquido);
+    document.getElementById('card-restante').innerText = formatMoney(Math.max(0, programado - acumulado));
+    document.getElementById('card-porcentagem').innerText = `${(programado > 0 ? (acumulado / programado) * 100 : 0).toFixed(2)}%`;
+
+    atualizarEstadoInterfaceEdicao();
+    renderChartsMensais(labels, dataDiario, dataMetaDiaria, dataAcumulado, dataEsperadoAcumulado);
+  }
+
+  function salvarValor(dia, campo, valor) {
+    if (!modoEdicaoLiberado) {
+      alert("⚠️ O arquivo está em modo de leitura. Clique em '🔒 Edição Bloqueada' para desbloquear.");
+      renderTableMensal();
+      return;
+    }
+
+    const key = `faturamento_${anoAtual}_${abaAtual}`;
+    const dadosSalvos = JSON.parse(localStorage.getItem(key)) || {};
+    if (!dadosSalvos[dia]) dadosSalvos[dia] = {};
+    dadosSalvos[dia][campo] = parseBrValue(valor);
+    localStorage.setItem(key, JSON.stringify(dadosSalvos));
+    renderTableMensal();
+  }
+
+  function renderChartsMensais(labels, diario, metaDiaria, acumulado, esperado) {
+    if (dailyChartInstance) dailyChartInstance.destroy();
+    if (accumulatedChartInstance) accumulatedChartInstance.destroy();
+
+    const colors = getThemeColors();
+
+    dailyChartInstance = new Chart(document.getElementById('chartDaily').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Faturamento (R$)', data: diario, backgroundColor: colors.primary, borderRadius: 2 },
+          { label: 'Meta Diária (R$)', data: metaDiaria, type: 'line', borderColor: colors.secondary, borderDash: [4, 4], pointRadius: 0 }
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    accumulatedChartInstance = new Chart(document.getElementById('chartAccumulated').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Realizado Acumulado', data: acumulado, borderColor: colors.primary, backgroundColor: 'rgba(0,0,0,0.05)', fill: true, tension: 0.1 },
+          { label: 'Esperado Acumulado', data: esperado, borderColor: colors.secondary, borderDash: [4, 4], pointRadius: 0 }
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+
+  function renderDashboardGeral() {
+    const tbody = document.getElementById('dash-table-body');
+    tbody.innerHTML = '';
+
+    let totalProgAno = 0, totalProgKgAno = 0, totalRealKgAno = 0, totalRealAno = 0, totalImpAno = 0, totalCustosAno = 0, totalLiqAno = 0;
+    const arrayProg = [], arrayReal = [], arrayAcumuladoAno = [];
+    let somaAcumulada = 0;
+
+    meses.forEach((mes, idx) => {
+      const config = JSON.parse(localStorage.getItem(`config_${anoAtual}_${idx}`)) || { programado: 0, programadoKg: 0, realizadoKg: 0, custos: 0, impostoPct: 0 };
+      const dados = JSON.parse(localStorage.getItem(`faturamento_${anoAtual}_${idx}`)) || {};
+
+      let totalRealMes = 0;
+      Object.values(dados).forEach(d => {
+        totalRealMes += parseBrValue(d.faturamento);
+      });
+
+      const impostoMes = totalRealMes * ((config.impostoPct || 0) / 100);
+      const custosMes = config.custos || 0;
+      const liquidoMes = totalRealMes - impostoMes - custosMes;
+      const pctMes = config.programado > 0 ? (totalRealMes / config.programado) * 100 : 0;
+      const pctKgMes = config.programadoKg > 0 ? (config.realizadoKg / config.programadoKg) * 100 : 0;
+
+      totalProgAno += config.programado;
+      totalProgKgAno += (config.programadoKg || 0);
+      totalRealKgAno += (config.realizadoKg || 0);
+      totalRealAno += totalRealMes;
+      totalImpAno += impostoMes;
+      totalCustosAno += custosMes;
+      totalLiqAno += liquidoMes;
+
+      somaAcumulada += totalRealMes;
+
+      arrayProg.push(config.programado);
+      arrayReal.push(totalRealMes);
+      arrayAcumuladoAno.push(somaAcumulada);
+
+      const restanteKgMes = Math.max(0, (config.programadoKg || 0) - (config.realizadoKg || 0));
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="col-date"><b>${mes}/${anoAtual}</b></td>
+        <td class="col-num">${formatMoney(config.programado)}</td>
+        <td class="col-num">${formatKg(config.programadoKg || 0)}</td>
+        <td class="col-num">${formatKg(config.realizadoKg || 0)}</td>
+        <td class="col-num">${formatKg(restanteKgMes)}</td>
+        <td class="col-num">${pctKgMes.toFixed(2)}%</td>
+        <td class="col-num">${formatMoney(totalRealMes)}</td>
+        <td class="col-num">${formatMoney(impostoMes)}</td>
+        <td class="col-num">${formatMoney(custosMes)}</td>
+        <td class="col-num">${formatMoney(liquidoMes)}</td>
+        <td class="col-num">${pctMes.toFixed(2)}%</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const pctProdAno = totalProgKgAno > 0 ? (totalRealKgAno / totalProgKgAno) * 100 : 0;
+
+    document.getElementById('dash-programado').innerText = formatMoney(totalProgAno);
+    document.getElementById('dash-programado-kg').innerText = formatKg(totalProgKgAno);
+    document.getElementById('dash-realizado-kg').innerText = formatKg(totalRealKgAno);
+    document.getElementById('dash-restante-kg').innerText = formatKg(Math.max(0, totalProgKgAno - totalRealKgAno));
+    document.getElementById('dash-porcentagem-kg').innerText = `${pctProdAno.toFixed(2)}%`;
+    
+    document.getElementById('dash-realizado').innerText = formatMoney(totalRealAno);
+    document.getElementById('dash-impostos').innerText = formatMoney(totalImpAno);
+    document.getElementById('dash-custos').innerText = formatMoney(totalCustosAno);
+    document.getElementById('dash-liquido').innerText = formatMoney(totalLiqAno);
+    document.getElementById('dash-porcentagem').innerText = `${(totalProgAno > 0 ? (totalRealAno / totalProgAno) * 100 : 0).toFixed(2)}%`;
+
+    renderChartsAnuais(meses, arrayProg, arrayReal, arrayAcumuladoAno);
+  }
+
+  function renderChartsAnuais(labels, prog, real, acumulado) {
+    if (annualMonthlyChartInstance) annualMonthlyChartInstance.destroy();
+    if (annualAccumulatedChartInstance) annualAccumulatedChartInstance.destroy();
+
+    const colors = getThemeColors();
+
+    annualMonthlyChartInstance = new Chart(document.getElementById('chartAnnualMonthly').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Programado (R$)', data: prog, backgroundColor: colors.muted, borderRadius: 2 },
+          { label: 'Faturamento (R$)', data: real, backgroundColor: colors.primary, borderRadius: 2 }
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    annualAccumulatedChartInstance = new Chart(document.getElementById('chartAnnualAccumulated').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{ label: 'Faturamento Acumulado Ano (R$)', data: acumulado, borderColor: colors.primary, backgroundColor: 'rgba(0,0,0,0.05)', fill: true, tension: 0.2 }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+
+  /* EXPORTAR EXCEL COMPLETO MULTI-ANO (2024 A 2030) */
+  function exportarExcelCompleto() {
+    const wb = XLSX.utils.book_new();
+
+    const listaConsolidadaAnos = [];
+    anosDisponiveis.forEach(ano => {
+      meses.forEach((mes, idx) => {
+        const config = JSON.parse(localStorage.getItem(`config_${ano}_${idx}`)) || { programado: 0, programadoKg: 0, realizadoKg: 0, custos: 0, impostoPct: 0 };
+        const dados = JSON.parse(localStorage.getItem(`faturamento_${ano}_${idx}`)) || {};
+
+        let totalRealMes = 0;
+        Object.values(dados).forEach(d => {
+          totalRealMes += parseBrValue(d.faturamento);
+        });
+
+        const impostoMes = totalRealMes * ((config.impostoPct || 0) / 100);
+        const custosMes = config.custos || 0;
+        const liquidoMes = totalRealMes - impostoMes - custosMes;
+        const pctMes = config.programado > 0 ? (totalRealMes / config.programado) * 100 : 0;
+        const pctKgMes = config.programadoKg > 0 ? (config.realizadoKg / config.programadoKg) * 100 : 0;
+        const restanteKgMes = Math.max(0, (config.programadoKg || 0) - (config.realizadoKg || 0));
+
+        listaConsolidadaAnos.push({
+          "Ano": ano,
+          "Mês": mes,
+          "Mês/Ano": `${mes}/${ano}`,
+          "Programado (R$)": config.programado || 0,
+          "Programado (kg)": config.programadoKg || 0,
+          "Faturado (kg)": config.realizadoKg || 0,
+          "Falta Produção (kg)": restanteKgMes,
+          "Atingido Produção (%)": parseFloat(pctKgMes.toFixed(2)),
+          "Faturamento Realizado (R$)": totalRealMes,
+          "Impostos (R$)": impostoMes,
+          "Custos Totais (R$)": custosMes,
+          "Realizado Líquido (R$)": liquidoMes,
+          "Meta Atingida Faturamento (%)": parseFloat(pctMes.toFixed(2))
+        });
+      });
+    });
+
+    const wsDashConsolidado = XLSX.utils.json_to_sheet(listaConsolidadaAnos);
+    XLSX.utils.book_append_sheet(wb, wsDashConsolidado, "Dashboard_Consolidado");
+
+    anosDisponiveis.forEach(ano => {
+      meses.forEach((mes, idx) => {
+        const totalDias = getDaysInMonth(idx, ano);
+        const config = JSON.parse(localStorage.getItem(`config_${ano}_${idx}`)) || { programado: 0, programadoKg: 0, realizadoKg: 0, diasUteis: 22, custos: 0, impostoPct: 0 };
+        const dadosSalvos = JSON.parse(localStorage.getItem(`faturamento_${ano}_${idx}`)) || {};
+
+        const programado = config.programado || 0;
+        const diasUteis = config.diasUteis > 0 ? config.diasUteis : 1;
+        const metaDiariaUtil = programado / diasUteis;
+
+        let acumulado = 0, diasUteisDecorridos = 0;
+        const listaMensalColunas = [];
+
+        for (let dia = 1; dia <= totalDias; dia++) {
+          const registro = dadosSalvos[dia] || {};
+          const valorDiario = parseBrValue(registro.faturamento);
+          acumulado += valorDiario;
+
+          const isWeekend = (new Date(ano, idx, dia).getDay() % 6 === 0);
+          if (!isWeekend) diasUteisDecorridos++;
+
+          const esperadAcumulado = metaDiariaUtil * Math.min(diasUteisDecorridos, diasUteis);
+          const metaPorcentagem = programado > 0 ? (acumulado / programado) * 100 : 0;
+
+          listaMensalColunas.push({
+            "Data": `${String(dia).padStart(2, '0')}/${String(idx + 1).padStart(2, '0')}/${ano}`,
+            "Dia Útil/FDS": isWeekend ? "Final de Semana" : "Dia Útil",
+            "Faturamento Diário (R$)": valorDiario,
+            "Acumulado (R$)": acumulado,
+            "Esperado Acumulado (R$)": esperadAcumulado,
+            "Meta Atingida (%)": parseFloat(metaPorcentagem.toFixed(2)),
+            "Param_Programado_R$": programado,
+            "Param_Programado_Kg": config.programadoKg || 0,
+            "Param_Realizado_Kg": config.realizadoKg || 0,
+            "Param_Dias_Uteis": diasUteis,
+            "Param_Custos_R$": config.custos || 0,
+            "Param_Imposto_Pct": config.impostoPct || 0
+          });
+        }
+
+        const wsMes = XLSX.utils.json_to_sheet(listaMensalColunas);
+        XLSX.utils.book_append_sheet(wb, wsMes, `${mes}_${ano}`);
+      });
+    });
+
+    XLSX.writeFile(wb, `Faturamento_Consolidado_Todos_Anos.xlsx`);
+  }
+
+  init();
+</script>
+
+</body>
+</html>
